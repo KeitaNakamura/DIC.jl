@@ -29,7 +29,7 @@ end
 
 Return `npixes` outer indices around `subset`.
 Violated indices in `image` are cut automatically.
-This is useful to give `region` in [`search`](@ref).
+This is useful to give `region` in [`coarse_search`](@ref).
 
 ```jldoctest
 julia> image = rand(10,10);

@@ -40,9 +40,9 @@ function zncc(A::AbstractArray{<: RGB}, B::AbstractArray{<: RGB})
 end
 
 """
-    search(subset, image; region = CartesianIndices(image)) -> indices, R
+    coarse_search(subset, image; region = CartesianIndices(image)) -> indices, R
 
-Search `subset` in `image` using DIC.
+Perform coarse search `subset` in `image` using DIC.
 Return the `indices` which has the highest correlation with `subset`.
 Use `image[indices]` to get the found part of image.
 The searching `region` (entire image by default) can also be specified
@@ -55,11 +55,11 @@ julia> image = rand(10,10);
 
 julia> subset = image[3:5, 2:3];
 
-julia> search(subset, image)
+julia> coarse_search(subset, image)
 (CartesianIndex{2}[CartesianIndex(3, 2) CartesianIndex(3, 3); CartesianIndex(4, 2) CartesianIndex(4, 3); CartesianIndex(5, 2) CartesianIndex(5, 3)], 1.0)
 ```
 """
-function search(subset::AbstractArray, image::AbstractArray; region::CartesianIndices = CartesianIndices(image))
+function coarse_search(subset::AbstractArray, image::AbstractArray; region::CartesianIndices = CartesianIndices(image))
     inds = walkindices(subset, image; region)
     Rs = similar(inds, Float64)
     Threads.@threads for i in eachindex(inds, Rs)

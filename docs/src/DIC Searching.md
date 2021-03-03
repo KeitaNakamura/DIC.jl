@@ -4,7 +4,9 @@ DocTestSetup = :(using DIC)
 
 # DIC Searching
 
-Digital Image Correlation searching can be performed by using `search` method.
+## Coarse search
+
+Coarse search using zero-mean normalized cross-correlation can be performed by using `coarse_search` method.
 First, you need to `load` your image file.
 
 ```@example 1
@@ -27,7 +29,7 @@ save("buffalo_part1.tif", subset) # hide
 Searching this `subset` in `image` returns corresponding `CartesianIndices`.
 
 ```@example 1
-indices, R = search(subset, image)
+indices, C = coarse_search(subset, image)
 image[indices]
 save("buffalo_searched.tif", ans) # hide
 ```
