@@ -52,3 +52,10 @@ function neighborindices(subset::CartesianIndices, image::AbstractArray, npixes:
     newstop = clamp.(stop, 1, size(image))
     CartesianIndex(newstart):CartesianIndex(newstop)
 end
+
+function testimage(name::String)
+    if splitext(name)[1] == "buffalo"
+        return load(joinpath(dirname(@__FILE__), "../images/buffalo.tif"))
+    end
+    throw(ArgumentError("test image $name is not exist"))
+end
