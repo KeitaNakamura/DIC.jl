@@ -60,8 +60,10 @@ julia> search(subset, image)
 ```
 """
 function search(subset::AbstractArray, image::AbstractArray; region::CartesianIndices = CartesianIndices(image))
-    Rs = map(walkindices(subset, image; region)) do inds
-        zncc(view(image, inds), subset)
+    inds = walkindices(subset, image; region)
+    Rs = similar(inds, Float64)
+    Threads.@threads for i in eachindex(inds, Rs)
+        @inbounds Rs[i] = zncc(view(image, inds[i]), subset)
     end
     I = argmax(Rs)
     I:I+CartesianIndex(size(subset).-1), Rs[I]
