@@ -5,11 +5,30 @@ Perform zero-mean normalized cross-correlation.
 """
 function zncc(A::AbstractArray{Float64}, B::AbstractArray{Float64})
     size(A) == size(B) || throw(DimensionMismatch("Dimensions must match."))
-    Ā = mean(A)
-    B̄ = mean(B)
-    n = sum((Aᵢ - Ā) * (Bᵢ - B̄) for (Aᵢ, Bᵢ) in zip(A, B))
-    d = sum((Aᵢ - Ā)^2 for Aᵢ in A) * sum((Bᵢ - B̄)^2 for Bᵢ in B)
-    n / sqrt(d)
+
+    # mean values
+    Ā = 0.0
+    B̄ = 0.0
+    @inbounds @simd for i in eachindex(A, B)
+        Ā += A[i]
+        B̄ += B[i]
+    end
+    Ā /= length(A)
+    B̄ /= length(B)
+
+    # numerator/denominator
+    n = 0.0
+    d_A = 0.0
+    d_B = 0.0
+    @inbounds @simd for i in eachindex(A, B)
+        Aᵢ = A[i]
+        Bᵢ = B[i]
+        n += (Aᵢ - Ā) * (Bᵢ - B̄)
+        d_A += (Aᵢ - Ā)^2
+        d_B += (Bᵢ - B̄)^2
+    end
+
+    n / sqrt(d_A * d_B)
 end
 
 function zncc(A::AbstractArray{<: Gray}, B::AbstractArray{<: Gray})
