@@ -5,7 +5,14 @@ using Reexport
 using FileIO, ImageMagick, ImageIO # io
 using ImageView
 
-using Statistics, MappedArrays
+using
+    Statistics,
+    MappedArrays,
+    Interpolations,
+# automatic differentiations
+    StaticArrays,
+    ForwardDiff,
+    DiffResults
 
 export
 # io/visualize
