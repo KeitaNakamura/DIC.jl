@@ -60,14 +60,21 @@ julia> coarse_search(subset, image)
 (CartesianIndex{2}[CartesianIndex(3, 2) CartesianIndex(3, 3); CartesianIndex(4, 2) CartesianIndex(4, 3); CartesianIndex(5, 2) CartesianIndex(5, 3)], 1.0)
 ```
 """
-function coarse_search(subset::AbstractArray, image::AbstractArray; region::CartesianIndices = CartesianIndices(image))
+function coarse_search(subset::AbstractArray, image::AbstractArray; region::CartesianIndices = CartesianIndices(image), parallel::Bool = true)
     inds = walkindices(subset, image; region)
+    A = map(x -> x.indices, inds)
     Cs = similar(inds, Float64)
-    Threads.@threads for i in eachindex(inds, Cs)
-        @inbounds Cs[i] = zncc(view(image, inds[i]), subset)
+    if parallel
+        Threads.@threads for i in eachindex(inds, Cs)
+            @inbounds Cs[i] = zncc(view(image, inds[i]), subset)
+        end
+    else
+        for i in eachindex(inds, Cs)
+            @inbounds Cs[i] = zncc(view(image, inds[i]), subset)
+        end
     end
     I = argmax(Cs)
-    I:I+CartesianIndex(size(subset).-1), Cs[I]
+    inds[I], Cs[I]
 end
 
 # for 2D
@@ -105,7 +112,7 @@ julia> image = DIC.testimage("buffalo");
 julia> subset = image[100:300, 300:500];
 
 julia> center, C = fine_search(subset, image, CartesianIndices((101:301, 301:501)))
-((200.00000782067005, 400.00001094427904), 0.9999999999438116)
+([200.00000782067005, 400.00001094427904], 0.9999999999438116)
 ```
 """
 function fine_search(subset::AbstractArray{T, dim}, image::AbstractArray{T, dim}, first_guess::CartesianIndices{dim}) where {T <: Real, dim}
@@ -123,7 +130,7 @@ function fine_search(subset::AbstractArray{T, dim}, image::AbstractArray{T, dim}
         x += -H \ ∇x
     end
     center = Tuple(first(first_guess) + last(first_guess)) ./ 2
-    ntuple(i -> center[i] + x[i], Val(dim)), C
+    SVector(ntuple(i -> center[i] + x[i], Val(dim))), C
 end
 
 function fine_search(subset::AbstractArray, image::AbstractArray, first_guess::CartesianIndices)

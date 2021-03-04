@@ -25,9 +25,9 @@ function walkindices(subset::AbstractArray, image::AbstractArray; region::Cartes
 end
 
 """
-    neighborindices(subset::CartesianIndices, image, npixes::Int)
+    neighborindices(subset::CartesianIndices, image, npixels::Int)
 
-Return `npixes` outer indices around `subset`.
+Return `npixels` outer indices around `subset`.
 Violated indices in `image` are cut automatically.
 This is useful to give `region` in [`coarse_search`](@ref).
 
@@ -45,12 +45,16 @@ julia> neighborindices(CartesianIndices((4:6, 3:6)), image, 2)
  CartesianIndex(8, 1)  CartesianIndex(8, 2)     CartesianIndex(8, 8)
 ```
 """
-function neighborindices(subset::CartesianIndices, image::AbstractArray, npixes::Int)
-    start = Tuple(first(subset)) .- npixes
-    stop = Tuple(last(subset)) .+ npixes
+function neighborindices(subset::CartesianIndices, image::AbstractArray, npixels::Int)
+    start = Tuple(first(subset)) .- npixels
+    stop = Tuple(last(subset)) .+ npixels
     newstart = clamp.(start, 1, size(image))
     newstop = clamp.(stop, 1, size(image))
     CartesianIndex(newstart):CartesianIndex(newstop)
+end
+
+function neighborindices(point::CartesianIndex, image::AbstractArray, npixels::Int)
+    neighborindices(point:point, image, npixels)
 end
 
 function testimage(name::String)
