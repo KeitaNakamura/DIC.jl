@@ -1,3 +1,6 @@
+to_float(A::AbstractArray{<: Gray}) = mappedarray(Float64, A)
+to_float(A::AbstractArray{<: RGB}) = to_float(Gray.(A))
+
 """
     zncc(image1, image2)
 
@@ -31,16 +34,12 @@ function zncc(A::AbstractArray{T}, B::AbstractArray{U}) where {T <: Real, U <: R
     n / sqrt(d_A * d_B)
 end
 
-function zncc(A::AbstractArray{<: Gray}, B::AbstractArray{<: Gray})
-    zncc(mappedarray(Float64, A), mappedarray(Float64, B))
-end
-
-function zncc(A::AbstractArray{<: RGB}, B::AbstractArray{<: RGB})
-    zncc(mappedarray(Gray, A), mappedarray(Gray, B))
+function zncc(A::AbstractArray, B::AbstractArray)
+    zncc(to_float(A), to_float(B))
 end
 
 """
-    coarse_search(subset, image; region = CartesianIndices(image)) -> indices, R
+    coarse_search(subset, image; region = CartesianIndices(image)) -> indices, C
 
 Perform coarse search `subset` in `image` using DIC.
 Return the `indices` which has the highest correlation with `subset`.
@@ -49,6 +48,8 @@ The searching `region` (entire image by default) can also be specified
 by `CartesianIndices` to reduce computations.
 
 See also [`neighborindices`](@ref).
+
+# Examples
 
 ```jldoctest
 julia> image = rand(10,10);
@@ -70,8 +71,8 @@ function coarse_search(subset::AbstractArray, image::AbstractArray; region::Cart
 end
 
 # for 2D
-solution_vector(::Val{2}) = zero(SVector{6, Float64})
-function compute_correlation(subset::AbstractArray{<: Gray, 2}, image_itp::AbstractArray{<: Real, 2}, first_guess::CartesianIndices{2}, X::SVector{6})
+solution_vector(::Type{T}, ::Val{2}) where {T} = zero(SVector{6, T})
+function compute_correlation(subset::AbstractArray{<: Real, 2}, image_itp::AbstractArray{<: Real, 2}, first_guess::CartesianIndices{2}, X::SVector{6})
     xc, yc = Tuple(first(first_guess) + last(first_guess)) ./ 2
     u, v, dudx, dudy, dvdx, dvdy = Tuple(X)
     sol = mappedarray(first_guess) do I
@@ -82,17 +83,35 @@ function compute_correlation(subset::AbstractArray{<: Gray, 2}, image_itp::Abstr
         y′ = y + v + dvdx*dx + dvdy*dy
         image_itp(x′, y′)
     end
-    zncc(mappedarray(Float64, subset), sol)
+    zncc(subset, sol)
 end
 
 # TODO: for 3D
 # solution_vector
 # compute_correlation
 
-function fine_search(subset::AbstractArray{<: Gray, dim}, image::AbstractArray{<: Gray, dim}, first_guess::CartesianIndices{dim}) where {dim}
+"""
+    fine_search(subset, image, first_guess::CartesianIndices) -> center, C
+
+Perform fine search `subset` in `image` based on the Newton-Raphson method.
+The results by [`coarse_search`](@ref) can be used as `first_guess`.
+Note that returned `center` is a center coordinates (not integer any more) of searched subset in `image`.
+
+# Examples
+
+```jldoctest
+julia> image = DIC.testimage("buffalo");
+
+julia> subset = image[100:300, 300:500];
+
+julia> center, C = fine_search(subset, image, CartesianIndices((101:301, 301:501)))
+((200.00000782067005, 400.00001094427904), 0.9999999999438116)
+```
+"""
+function fine_search(subset::AbstractArray{T, dim}, image::AbstractArray{T, dim}, first_guess::CartesianIndices{dim}) where {T <: Real, dim}
     @assert size(subset) == size(first_guess)
-    image_itp = interpolate(mappedarray(Float64, image), BSpline(Linear())) # sub-pixel interpolation
-    x = solution_vector(Val(dim))
+    image_itp = interpolate(image, BSpline(Linear())) # sub-pixel interpolation
+    x = solution_vector(T, Val(dim))
     result = DiffResults.HessianResult(x)
     C = 0.0
     for i in 1:20
@@ -105,4 +124,8 @@ function fine_search(subset::AbstractArray{<: Gray, dim}, image::AbstractArray{<
     end
     center = Tuple(first(first_guess) + last(first_guess)) ./ 2
     ntuple(i -> center[i] + x[i], Val(dim)), C
+end
+
+function fine_search(subset::AbstractArray, image::AbstractArray, first_guess::CartesianIndices)
+    fine_search(to_float(subset), to_float(image), first_guess)
 end

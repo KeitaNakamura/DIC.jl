@@ -23,7 +23,8 @@ export
     walkindices,
     neighborindices,
 # searching
-    coarse_search
+    coarse_search,
+    fine_search
 
 include("utils.jl")
 include("searching.jl")
