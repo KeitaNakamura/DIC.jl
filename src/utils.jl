@@ -15,7 +15,7 @@ julia> walkindices(subset, image)
  [CartesianIndex(3, 1) CartesianIndex(3, 2); CartesianIndex(4, 1) CartesianIndex(4, 2)]     [CartesianIndex(3, 3) CartesianIndex(3, 4); CartesianIndex(4, 3) CartesianIndex(4, 4)]
 ```
 """
-function walkindices(subset::AbstractArray, image::AbstractArray; region::CartesianIndices = CartesianIndices(image))
+function walkindices(subset::AbstractArray, image::AbstractArray; region::PixelIndices = CartesianIndices(image))
     checkbounds(CartesianIndices(image), region)
     checkbounds(region, CartesianIndices(subset))
     origins = first(region):first(region)+CartesianIndex(size(region) .- size(subset))
@@ -25,7 +25,7 @@ function walkindices(subset::AbstractArray, image::AbstractArray; region::Cartes
 end
 
 """
-    neighborindices(subset::CartesianIndices, image, npixels::Int)
+    neighborindices(subset::PixelIndices, image, npixels::Int)
 
 Return `npixels` outer indices around `subset`.
 Violated indices in `image` are cut automatically.
@@ -45,7 +45,7 @@ julia> neighborindices(CartesianIndices((4:6, 3:6)), image, 2)
  CartesianIndex(8, 1)  CartesianIndex(8, 2)     CartesianIndex(8, 8)
 ```
 """
-function neighborindices(subset::CartesianIndices, image::AbstractArray, npixels::Int)
+function neighborindices(subset::PixelIndices, image::AbstractArray, npixels::Int)
     start = Tuple(first(subset)) .- npixels
     stop = Tuple(last(subset)) .+ npixels
     newstart = clamp.(start, 1, size(image))

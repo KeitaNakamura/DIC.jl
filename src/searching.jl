@@ -60,7 +60,7 @@ julia> coarse_search(subset, image)
 (CartesianIndex{2}[CartesianIndex(3, 2) CartesianIndex(3, 3); CartesianIndex(4, 2) CartesianIndex(4, 3); CartesianIndex(5, 2) CartesianIndex(5, 3)], 1.0)
 ```
 """
-function coarse_search(subset::AbstractArray, image::AbstractArray; region::CartesianIndices = CartesianIndices(image), parallel::Bool = true)
+function coarse_search(subset::AbstractArray, image::AbstractArray; region::PixelIndices = CartesianIndices(image), parallel::Bool = true)
     inds = walkindices(subset, image; region)
     A = map(x -> x.indices, inds)
     Cs = similar(inds, Float64)
@@ -79,7 +79,7 @@ end
 
 # for 2D
 solution_vector(::Type{T}, ::Val{2}) where {T} = zero(SVector{6, T})
-function compute_correlation(subset::AbstractArray{<: Real, 2}, image_itp::AbstractArray{<: Real, 2}, first_guess::CartesianIndices{2}, X::SVector{6})
+function compute_correlation(subset::AbstractArray{<: Real, 2}, image_itp::AbstractArray{<: Real, 2}, first_guess::PixelIndices{2}, X::SVector{6})
     xc, yc = Tuple(first(first_guess) + last(first_guess)) ./ 2
     u, v, dudx, dudy, dvdx, dvdy = Tuple(X)
     sol = mappedarray(first_guess) do I
@@ -98,7 +98,7 @@ end
 # compute_correlation
 
 """
-    fine_search(subset, image, first_guess::CartesianIndices) -> center, C
+    fine_search(subset, image, first_guess::PixelIndices) -> center, C
 
 Perform fine search `subset` in `image` based on the Newton-Raphson method.
 The results by [`coarse_search`](@ref) can be used as `first_guess`.
@@ -115,7 +115,7 @@ julia> center, C = fine_search(subset, image, CartesianIndices((101:301, 301:501
 ([200.00000782067005, 400.00001094427904], 0.9999999999438116)
 ```
 """
-function fine_search(subset::AbstractArray{T, dim}, image::AbstractArray{T, dim}, first_guess::CartesianIndices{dim}) where {T <: Real, dim}
+function fine_search(subset::AbstractArray{T, dim}, image::AbstractArray{T, dim}, first_guess::PixelIndices{dim}) where {T <: Real, dim}
     @assert size(subset) == size(first_guess)
     image_itp = interpolate(image, BSpline(Linear())) # sub-pixel interpolation
     x = solution_vector(T, Val(dim))
@@ -133,6 +133,6 @@ function fine_search(subset::AbstractArray{T, dim}, image::AbstractArray{T, dim}
     SVector(ntuple(i -> center[i] + x[i], Val(dim))), C
 end
 
-function fine_search(subset::AbstractArray, image::AbstractArray, first_guess::CartesianIndices)
+function fine_search(subset::AbstractArray, image::AbstractArray, first_guess::PixelIndices)
     fine_search(to_float(subset), to_float(image), first_guess)
 end

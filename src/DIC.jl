@@ -34,6 +34,8 @@ export
     strain,
     displacement_field
 
+const PixelIndices{dim} = AbstractArray{<: CartesianIndex{dim}}
+
 include("utils.jl")
 include("searching.jl")
 include("displacement.jl")
