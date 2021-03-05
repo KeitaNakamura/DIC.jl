@@ -1,5 +1,7 @@
-struct DisplacementField{T <: SVector, N, ITP <: Interpolations.BSplineInterpolation{T, N}} <: AbstractArray{T, N}
+struct DisplacementField{T <: SVector, N, ITP <: Interpolations.BSplineInterpolation{T, N}, V} <: AbstractArray{T, N}
     itp::ITP
+    coords::Coordinate{N, Int, V}
+    Cs::Array{Float64, N}
 end
 
 Base.size(x::DisplacementField) = size(x.itp)
@@ -19,9 +21,10 @@ end
     (dudx + dudx') / 2
 end
 
-function displacement_field((before, after)::Pair{<: AbstractArray, <: AbstractArray}, sample_points::Coordinate{dim, Int}, npixels::Int, surrounding_npixels::Int = 5*npixels) where {dim}
+function displacement_field((before, after)::Pair{<: AbstractArray, <: AbstractArray}, sample_points::Coordinate{dim, Int}, npixels::Int, surrounding_npixels::Int = 5*npixels; thresh::Real = -Inf) where {dim}
     @assert size(before) == size(after)
     disp = similar(sample_points, SVector{dim, Float64})
+    Cs = similar(sample_points, Float64)
     p = Progress(length(sample_points))
     Threads.@threads for i in eachindex(sample_points)
         indices = neighborindices(CartesianIndex(sample_points[i]), before, npixels)
@@ -29,7 +32,8 @@ function displacement_field((before, after)::Pair{<: AbstractArray, <: AbstractA
         first_guess, C = coarse_search(subset, after; region = neighborindices(indices, after, surrounding_npixels), parallel = false)
         center, C = fine_search(subset, after, first_guess)
         disp[i] = center - SVector(Tuple(first(indices) + last(indices))) / 2
+        Cs[i] = C
         next!(p)
     end
-    DisplacementField(interpolate(disp, BSpline(Linear())))
+    DisplacementField(interpolate(disp, BSpline(Linear())), sample_points, Cs)
 end
