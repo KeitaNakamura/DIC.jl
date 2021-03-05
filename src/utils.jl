@@ -16,7 +16,7 @@ julia> walkindices(subset, image)
 ```
 """
 function walkindices(subset::AbstractArray, image::AbstractArray; region::PixelIndices = CartesianIndices(image))
-    checkbounds(CartesianIndices(image), region)
+    checkbounds(image, region)
     checkbounds(region, CartesianIndices(subset))
     origins = first(region):first(region)+CartesianIndex(size(region) .- size(subset))
     map(origins) do I

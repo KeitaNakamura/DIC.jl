@@ -79,7 +79,7 @@ end
 
 # for 2D
 solution_vector(::Type{T}, ::Val{2}) where {T} = zero(SVector{6, T})
-function compute_correlation(subset::AbstractArray{<: Real, 2}, image_itp::AbstractArray{<: Real, 2}, first_guess::PixelIndices{2}, X::SVector{6})
+function compute_correlation(subset::AbstractArray{<: Real, 2}, image_itp::AbstractArray{T, 2}, first_guess::PixelIndices{2}, X::SVector{6}) where {T}
     xc, yc = Tuple(first(first_guess) + last(first_guess)) ./ 2
     u, v, dudx, dudy, dvdx, dvdy = Tuple(X)
     sol = mappedarray(first_guess) do I
@@ -88,7 +88,9 @@ function compute_correlation(subset::AbstractArray{<: Real, 2}, image_itp::Abstr
         dy = y - yc
         x′ = x + u + dudx*dx + dudy*dy
         y′ = y + v + dvdx*dx + dvdy*dy
-        image_itp(x′, y′)
+        # If calculted coordinates are out side of image, just return zero.
+        # This means that out side of image are filled with black color.
+        checkbounds(Bool, image_itp, x′, y′) ? image_itp(x′, y′) : zero(T)
     end
     zncc(subset, sol)
 end

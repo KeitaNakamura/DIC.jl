@@ -26,7 +26,7 @@ function displacement_field((before, after)::Pair{<: AbstractArray, <: AbstractA
     Threads.@threads for i in eachindex(sample_points)
         indices = neighborindices(CartesianIndex(sample_points[i]), before, npixels)
         subset = before[indices]
-        first_guess, = coarse_search(subset, after; region = neighborindices(indices, after, surrounding_npixels), parallel = false)
+        first_guess, C = coarse_search(subset, after; region = neighborindices(indices, after, surrounding_npixels), parallel = false)
         center, C = fine_search(subset, after, first_guess)
         disp[i] = center - SVector(Tuple(first(indices) + last(indices))) / 2
         next!(p)
