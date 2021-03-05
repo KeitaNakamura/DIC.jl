@@ -1,8 +1,8 @@
 module DIC
 
 using Reexport
-@reexport using Images
 @reexport using Coordinates
+using Colors
 using FileIO, ImageMagick, ImageIO # io
 using ImageView
 
