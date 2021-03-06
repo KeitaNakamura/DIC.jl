@@ -7,7 +7,6 @@ using FileIO, ImageMagick, ImageIO # io
 using ImageView
 
 using
-    Statistics,
     MappedArrays,
     Interpolations,
 # automatic differentiations
