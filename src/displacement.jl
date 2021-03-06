@@ -1,4 +1,6 @@
-struct DisplacementField{T <: SVector, N, ITP <: Interpolations.BSplineInterpolation{T, N}, V} <: AbstractArray{T, N}
+struct DisplacementField{T <: SVector, N, CT, ITP <: Interpolations.BSplineInterpolation{T, N}, V} <: AbstractArray{T, N}
+    before::Array{CT}
+    after::Array{CT}
     itp::ITP
     coords::Coordinate{N, Int, V}
     Cs::Array{Float64, N}
@@ -21,6 +23,62 @@ end
     (dudx + dudx') / 2
 end
 
+function plot(disp::DisplacementField{<: Any, 2}; kwargs...)
+    # NOTE: need to swich x and y since the coordinates of pixels is differen from general coordinate system
+
+    m, n = size(disp)
+    l = min(m, n)
+
+    fig = Figure(backgroundcolor = RGBf0(0.98, 0.98, 0.98), resolution = round.(Int, (m, n) ./ l .* 1400))
+    image = reverse(disp.before', dims = 1)
+
+    # plot arrows
+    ax_image = fig[1,1] = Axis(fig)
+    image!(ax_image, image)
+
+    x = coordinateaxes(disp.coords, 2)
+    y = coordinateaxes(disp.coords, 1)
+    u = [x[2] for x in disp']
+    v = [x[1] for x in disp']
+    arrows!(ax_image, x, y, u, v; kwargs...)
+    ax_image.yreversed = true
+
+    # plot correlation contour
+    ax_cor, hm = contourf(fig[1,2], x, y, disp.Cs'; colormap = :jet)
+    arrows!(ax_cor, x, y, u, v; kwargs...)
+    ax_cor.yreversed = true
+
+    linkaxes!(ax_image, ax_cor)
+    ax_image.aspect = DataAspect()
+    ax_cor.aspect = DataAspect()
+
+    Colorbar(fig[1,3], hm, width = 30)
+
+    # plot volumetric strains
+    ϵv = mappedarray(i -> tr(strain(disp, Tuple(i)...)), CartesianIndices(disp))'
+    ax_vol, hm = contourf(fig[2,1], x, y, ϵv; colormap = :jet)
+    ax_vol.yreversed = true
+    linkaxes!(ax_image, ax_vol)
+    ax_vol.aspect = DataAspect()
+
+    Colorbar(fig[3,1], hm, height = 30, vertical = false)
+
+    # plot deviatoric strains
+    ϵd = mappedarray(CartesianIndices(disp)) do i
+        ϵ = strain(disp, Tuple(i)...)
+        e = ϵ - tr(ϵ) * one(ϵ)
+        sqrt(dot(ϵ, ϵ))
+    end |> transpose
+    ax_dev, hm = contourf(fig[2,2], x, y, ϵd; colormap = :jet)
+    ax_dev.yreversed = true
+    linkaxes!(ax_image, ax_dev)
+    ax_dev.aspect = DataAspect()
+
+    Colorbar(fig[3,2], hm, height = 30, vertical = false)
+
+    fig
+end
+
 function displacement_field((before, after)::Pair{<: AbstractArray, <: AbstractArray}, sample_points::Coordinate{dim, Int}, npixels::Int, surrounding_npixels::Int = 5*npixels; thresh::Real = -Inf) where {dim}
     @assert size(before) == size(after)
     disp = similar(sample_points, SVector{dim, Float64})
@@ -35,5 +93,5 @@ function displacement_field((before, after)::Pair{<: AbstractArray, <: AbstractA
         Cs[i] = C
         next!(p)
     end
-    DisplacementField(interpolate(disp, BSpline(Linear())), sample_points, Cs)
+    DisplacementField(before, after, interpolate(disp, BSpline(Linear())), sample_points, Cs)
 end

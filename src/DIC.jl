@@ -5,6 +5,7 @@ using Reexport
 using Colors
 using FileIO, ImageMagick, ImageIO # io
 using ImageView
+using LinearAlgebra: tr, dot
 
 using
     MappedArrays,
@@ -14,7 +15,9 @@ using
     ForwardDiff,
     DiffResults,
 # progress bar
-    ProgressMeter
+    ProgressMeter,
+# plot
+    GLMakie
 
 using Base: @_propagate_inbounds_meta
 
@@ -31,7 +34,8 @@ export
     fine_search,
 # displacement
     strain,
-    displacement_field
+    displacement_field,
+    plot
 
 const PixelIndices{dim} = AbstractArray{<: CartesianIndex{dim}}
 
