@@ -17,7 +17,7 @@ end
 end
 
 @inline function strain(x::DisplacementField{<: Any, N}, I::Vararg{Real, N}) where {N}
-    dudx = reduce(hcat, Interpolations.gradient(x, I...))
+    dudx = reduce(hcat, Interpolations.gradient(x.itp, I...))
     (dudx + dudx') / 2
 end
 
