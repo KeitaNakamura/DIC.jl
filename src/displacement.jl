@@ -23,7 +23,7 @@ end
     (dudx + dudx') / 2
 end
 
-function plot(disp::DisplacementField{<: Any, 2}; kwargs...)
+function plot(disp::DisplacementField{<: Any, 2}; thresh_disp::Real = Inf, thresh_cor::Real = -Inf, kwargs...)
     # NOTE: need to swich x and y since the coordinates of pixels is differen from general coordinate system
 
     m, n = size(disp)
@@ -38,8 +38,16 @@ function plot(disp::DisplacementField{<: Any, 2}; kwargs...)
 
     x = coordinateaxes(disp.coords, 2)
     y = coordinateaxes(disp.coords, 1)
-    u = [x[2] for x in disp']
-    v = [x[1] for x in disp']
+    u = zeros(size(disp'))
+    v = zeros(size(disp'))
+    for i in CartesianIndices(disp')
+        ui = disp'[i][2]
+        vi = disp'[i][1]
+        sqrt(ui^2 + vi^2) > thresh_disp && continue
+        disp.Cs'[i] < thresh_cor && continue
+        u[i] = ui
+        v[i] = vi
+    end
     arrows!(ax_image, x, y, u, v; kwargs...)
     ax_image.yreversed = true
 
@@ -57,6 +65,7 @@ function plot(disp::DisplacementField{<: Any, 2}; kwargs...)
     # plot volumetric strains
     ϵv = mappedarray(i -> tr(strain(disp, Tuple(i)...)), CartesianIndices(disp))'
     ax_vol, hm = contourf(fig[2,1], x, y, ϵv; colormap = :jet)
+    arrows!(ax_vol, x, y, u, v; kwargs...)
     ax_vol.yreversed = true
     linkaxes!(ax_image, ax_vol)
     ax_vol.aspect = DataAspect()
@@ -70,6 +79,7 @@ function plot(disp::DisplacementField{<: Any, 2}; kwargs...)
         sqrt(dot(ϵ, ϵ))
     end |> transpose
     ax_dev, hm = contourf(fig[2,2], x, y, ϵd; colormap = :jet)
+    arrows!(ax_dev, x, y, u, v; kwargs...)
     ax_dev.yreversed = true
     linkaxes!(ax_image, ax_dev)
     ax_dev.aspect = DataAspect()
