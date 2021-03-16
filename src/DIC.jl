@@ -42,5 +42,6 @@ const PixelIndices{dim} = AbstractArray{<: CartesianIndex{dim}}
 include("utils.jl")
 include("searching.jl")
 include("displacement.jl")
+include("Camera.jl")
 
 end # module
