@@ -45,7 +45,8 @@ jobs:
           file: lcov.info
   docs:
     name: Documentation
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest # precompiling fail
+    runs-on: macOS-latest
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
