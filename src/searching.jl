@@ -4,7 +4,7 @@ to_float(A::AbstractArray{<: RGB}) = to_float(Gray.(A))
 """
     zncc(image1, image2)
 
-Perform zero-mean normalized cross-correlation.
+Perform zero-mean normalized cross-correlation between two images.
 """
 function zncc(A::AbstractArray{T}, B::AbstractArray{U}) where {T <: Real, U <: Real}
     size(A) == size(B) || throw(DimensionMismatch("Dimensions must match."))

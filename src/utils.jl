@@ -9,7 +9,7 @@ julia> image = rand(4,4);
 julia> subset = rand(2,2);
 
 julia> walkindices(subset, image)
-3×3 Array{CartesianIndices{2,Tuple{UnitRange{Int64},UnitRange{Int64}}},2}:
+3×3 Matrix{CartesianIndices{2, Tuple{UnitRange{Int64}, UnitRange{Int64}}}}:
  [CartesianIndex(1, 1) CartesianIndex(1, 2); CartesianIndex(2, 1) CartesianIndex(2, 2)]  …  [CartesianIndex(1, 3) CartesianIndex(1, 4); CartesianIndex(2, 3) CartesianIndex(2, 4)]
  [CartesianIndex(2, 1) CartesianIndex(2, 2); CartesianIndex(3, 1) CartesianIndex(3, 2)]     [CartesianIndex(2, 3) CartesianIndex(2, 4); CartesianIndex(3, 3) CartesianIndex(3, 4)]
  [CartesianIndex(3, 1) CartesianIndex(3, 2); CartesianIndex(4, 1) CartesianIndex(4, 2)]     [CartesianIndex(3, 3) CartesianIndex(3, 4); CartesianIndex(4, 3) CartesianIndex(4, 4)]
@@ -35,7 +35,7 @@ This is useful to give `region` in [`coarse_search`](@ref).
 julia> image = rand(10,10);
 
 julia> neighborindices(CartesianIndices((4:6, 3:6)), image, 2)
-7×8 CartesianIndices{2,Tuple{UnitRange{Int64},UnitRange{Int64}}}:
+7×8 CartesianIndices{2, Tuple{UnitRange{Int64}, UnitRange{Int64}}}:
  CartesianIndex(2, 1)  CartesianIndex(2, 2)  …  CartesianIndex(2, 8)
  CartesianIndex(3, 1)  CartesianIndex(3, 2)     CartesianIndex(3, 8)
  CartesianIndex(4, 1)  CartesianIndex(4, 2)     CartesianIndex(4, 8)

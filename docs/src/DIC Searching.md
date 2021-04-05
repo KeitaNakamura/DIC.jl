@@ -6,18 +6,23 @@ DocTestSetup = :(using DIC)
 
 ## Coarse search
 
-Coarse search using zero-mean normalized cross-correlation can be performed by using `coarse_search` method.
+In coarse searching, the following *zero-mean normalized cross-correlation* is used.
+```math
+C = \frac{\sum_x \sum_y (A(x,y) - \bar{A}) (B(x,y) - \bar{B})}{\sqrt{\sum_x \sum_y (A(x,y) - \bar{A})^2 \sum_x \sum_y (B(x,y) - \bar{B})^2}}
+```
+With this correlation value, the subset having the highest value of ``C (0 \leq C \leq 1)`` will be searched.
+
 First, you need to `load` your image file.
 
 ```@example 1
 using DIC # hide
-image = DIC.testimage("buffalo")
+image = DIC.testimage("buffalo") # use `load(filename)` for your own image
 save("buffalo.tif", image) # hide
 ```
 
 ![](buffalo.tif)
 
-Extracting a part of image can be done using sub-array.
+To extract a part of image, just create sub-array.
 
 ```@example 1
 subset = image[100:300, 300:500]
@@ -37,14 +42,14 @@ save("buffalo_searched.tif", ans) # hide
 ![](buffalo_searched.tif)
 
 `C` is the correlation value defined in the range from 0 to 1.
-In above example, result `C` should be `1`.
-Note that in `coarse_search`, only translation of `subset` is considered.
+In above example, the result `C` should be `1` since the subset is exactly a part of the original image.
+You should use a subset after a certain event in practice.
 
 ## Fine search
 
 The coarse search only considers the rigid translation of the subset with 1 pixel resolution.
 However, in fine search, searching is performed with sub-pixel resolution using linear interpolation, and the deformation of subset is also taken into account.
-See [this](https://link.springer.com/article/10.1007%2FBF02321405) for more detail.
+See [this study](https://link.springer.com/article/10.1007%2FBF02321405) for more detail.
 
 ```@example 2
 using DIC # hide
